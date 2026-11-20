@@ -24,6 +24,12 @@
         "careful": 0.7,
         "alt": 1.0,
         "cheat": 0.0
+      },
+      "provenance": {
+        "repository": "rq/rq",
+        "base_commit": "399ad6307febe64b20b818f71743b8337d3a1428",
+        "source_archive": "environment/rq-src.tar.gz",
+        "source_archive_sha256": "59c25d9f3b435ded17c96636ad1115f4812a244d448e98e30cb8751be06b5ac1"
       }
     }
   ]

@@ -1,5 +1,267 @@
 #!/bin/bash
-# Reference solution: apply the reference change to the checkout.
-set -euo pipefail
+set -eu
 cd /workspace/repo
-git apply --whitespace=nowarn "$(dirname "$0")/reference.patch"
+git apply --whitespace=nowarn <<'REFERENCE_PATCH'
+diff --git a/rq/queue.py b/rq/queue.py
+index 58cf13a537deaf8f5ce0a8fdcef5ebd98771e086..c198a039fec7b8df48a5d69d1a5c19f859500905 100644
+--- a/rq/queue.py
++++ b/rq/queue.py
+@@ -24,6 +24,7 @@ if TYPE_CHECKING:
+     from redis.client import Pipeline
+ 
+     from .job import Retry
++    from .registry import BaseRegistry
+ 
+ from .callbacks import Callback, execute_failure_callback, execute_success_callback
+ from .defaults import DEFAULT_RESULT_TTL, RQ_KEY_PREFIX
+@@ -333,16 +334,98 @@ class Queue:
+         """Deletes the queue.
+ 
+         Args:
+-            delete_jobs (bool): If true, removes all the associated messages on the queue first.
++            delete_jobs (bool): If true, first deletes every job that belongs to the queue,
++                whatever its state: waiting on the queue, held back by a rate limit, scheduled,
++                deferred, running, finished, failed or canceled. The queue's job registries go
++                with them, so a new queue with the same name starts empty. Jobs in other queues
++                that were waiting on one of these jobs are canceled rather than left waiting.
++                A job that is running keeps its rate limit slot until its execution ends.
++                If false, only the queue itself is removed and its jobs are kept.
+         """
+         if delete_jobs:
+-            self.empty()
++            self._delete_owned_jobs()
+ 
+         with self.connection.pipeline() as pipeline:
+             pipeline.srem(self.redis_queues_keys, self._key)
+             pipeline.delete(self._key)
++            if delete_jobs:
++                pipeline.delete(self.intermediate_queue_key, *[registry.key for registry in self._job_registries()])
+             pipeline.execute()
+ 
++    def _job_registries(self) -> list[BaseRegistry]:
++        """Returns every job registry kept for this queue."""
++        return [
++            self.started_job_registry,
++            self.finished_job_registry,
++            self.failed_job_registry,
++            self.deferred_job_registry,
++            self.ready_job_registry,
++            self.scheduled_job_registry,
++            self.canceled_job_registry,
++        ]
++
++    def _owned_job_ids(self) -> list[str]:
++        """Returns the ids of every job whose origin may be this queue.
++
++        Jobs held back by a rate limit are on no list of this queue; they are found through
++        the rate limit registries by their origin.
++        """
++        job_ids: dict[str, None] = {}
++        for job_id in self.connection.lrange(self.key, 0, -1):
++            job_ids[as_text(job_id)] = None
++        for job_id in self.connection.lrange(self.intermediate_queue_key, 0, -1):
++            job_ids[as_text(job_id)] = None
++        for registry in self._job_registries():
++            for job_id in registry.get_job_ids(cleanup=False):
++                job_ids[job_id] = None
++
++        for rate_limit_registry in RateLimitRegistry.all(self.connection):
++            candidates = rate_limit_registry.get_rate_limited_job_ids() + rate_limit_registry.get_allowed_job_ids()
++            if not candidates:
++                continue
++            with self.connection.pipeline() as pipeline:
++                for job_id in candidates:
++                    pipeline.hget(self.job_class.key_for(job_id), 'origin')
++                origins = pipeline.execute()
++            for job_id, origin in zip(candidates, origins):
++                if origin is not None and as_text(origin) == self.name:
++                    job_ids[job_id] = None
++        return list(job_ids)
++
++    def _delete_owned_jobs(self) -> None:
++        """Deletes every job that belongs to this queue. See `delete`."""
++        from .group import Group
++
++        jobs = [
++            job
++            for job in self.job_class.fetch_many(self._owned_job_ids(), self.connection, serializer=self.serializer)
++            if job is not None and job.origin == self.name
++        ]
++        owned_ids = {job.id for job in jobs}
++
++        # Jobs held back by a rate limit go first. Deleting a job that holds a slot promotes
++        # the oldest job still waiting for that limit, and that must not be one of ours.
++        jobs.sort(key=lambda job: job.get_status(refresh=False) != JobStatus.RATE_LIMITED)
++
++        for job in jobs:
++            dependents = self.job_class.fetch_many(job.dependent_ids, self.connection, serializer=self.serializer)
++            for dependent in dependents:
++                if dependent is None or dependent.id in owned_ids:
++                    continue
++                if dependent.get_status() == JobStatus.DEFERRED:
++                    # It waits on a job that will never run, so it would wait forever.
++                    dependent.cancel()
++
++            with self.connection.pipeline() as pipeline:
++                for dependency_id in job._dependency_ids:
++                    pipeline.srem(self.job_class.dependents_key_for(dependency_id), job.id)
++                pipeline.execute()
++
++            if job.group_id and not self.connection.exists(Group.get_key(job.group_id)):
++                # The group has expired, so there is nothing to remove the job from.
++                job.group_id = None
++            job.delete(remove_from_queue=False)
++
+     def is_empty(self) -> bool:
+         """Returns whether the current queue is empty.
+ 
+diff --git a/tests/test_queue_delete.py b/tests/test_queue_delete.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..f8f427a4ca22b6fc0662c3d11335e647d2117e5a
+--- /dev/null
++++ b/tests/test_queue_delete.py
+@@ -0,0 +1,143 @@
++from datetime import datetime, timedelta, timezone
++
++from rq import Queue, SimpleWorker
++from rq.exceptions import NoSuchJobError
++from rq.group import Group
++from rq.job import Job, JobStatus
++from rq.rate_limit import RateLimit, RateLimitRegistry
++from rq.registry import StartedJobRegistry
++from rq.results import Result
++from rq.scheduler import RQScheduler
++from rq.utils import now
++from tests import RQTestCase
++from tests.fixtures import div_by_zero, say_hello
++
++
++class TestQueueDelete(RQTestCase):
++    def assert_gone(self, *jobs: Job) -> None:
++        for job in jobs:
++            with self.assertRaises(NoSuchJobError):
++                Job.fetch(job.id, connection=self.connection)
++            self.assertIsNone(Result.fetch_latest(job))
++
++    def test_delete_removes_jobs_in_every_registry(self):
++        queue = Queue('work', connection=self.connection)
++        finished = queue.enqueue(say_hello)
++        failed = queue.enqueue(div_by_zero)
++        SimpleWorker([queue], connection=self.connection).work(burst=True)
++        scheduled = queue.enqueue_in(timedelta(hours=1), say_hello)
++        parent = queue.enqueue(say_hello)
++        deferred = queue.enqueue(say_hello, depends_on=parent)
++        canceled = queue.enqueue(say_hello)
++        canceled.cancel()
++
++        queue.delete(delete_jobs=True)
++
++        self.assert_gone(finished, failed, scheduled, parent, deferred, canceled)
++        self.assertNotIn('work', [q.name for q in Queue.all(connection=self.connection)])
++        again = Queue('work', connection=self.connection)
++        for registry in (
++            again.finished_job_registry,
++            again.failed_job_registry,
++            again.scheduled_job_registry,
++            again.deferred_job_registry,
++            again.canceled_job_registry,
++        ):
++            self.assertEqual(len(registry), 0)
++
++    def test_deleted_jobs_do_not_come_back(self):
++        queue = Queue('work', connection=self.connection)
++        other = Queue('other', connection=self.connection)
++        due = queue.enqueue_at(datetime.now(timezone.utc) - timedelta(minutes=1), say_hello)
++        parent = other.enqueue(say_hello)
++        child = queue.enqueue(say_hello, depends_on=parent)
++
++        queue.delete(delete_jobs=True)
++
++        scheduler = RQScheduler([Queue('work', connection=self.connection)], connection=self.connection)
++        scheduler.acquire_locks()
++        scheduler.enqueue_scheduled_jobs()
++        SimpleWorker([other], connection=self.connection).work(burst=True)
++
++        self.assertEqual(Queue('work', connection=self.connection).job_ids, [])
++        self.assertNotIn('work', [q.name for q in Queue.all(connection=self.connection)])
++        self.assert_gone(due, child)
++
++    def test_delete_cancels_dependents_in_other_queues(self):
++        queue = Queue('work', connection=self.connection)
++        other = Queue('other', connection=self.connection)
++        parent = queue.enqueue(say_hello)
++        dependent = other.enqueue(say_hello, depends_on=parent)
++
++        queue.delete(delete_jobs=True)
++
++        self.assertEqual(dependent.get_status(), JobStatus.CANCELED)
++        self.assertIn(dependent.id, other.canceled_job_registry)
++
++    def test_delete_removes_rate_limited_jobs_and_hands_over_their_slots(self):
++        limit = RateLimit('api', concurrency=1)
++        queue = Queue('work', connection=self.connection)
++        other = Queue('other', connection=self.connection)
++        holder = queue.enqueue(say_hello, rate_limit=limit)
++        waiting = queue.enqueue(say_hello, rate_limit=limit)
++        other_waiting = other.enqueue(say_hello, rate_limit=limit)
++        registry = RateLimitRegistry('api', connection=self.connection)
++
++        queue.delete(delete_jobs=True)
++
++        self.assert_gone(holder, waiting)
++        self.assertEqual(registry.get_allowed_job_ids(), [other_waiting.id])
++        self.assertEqual(other_waiting.get_status(), JobStatus.QUEUED)
++        self.assertEqual(Queue('work', connection=self.connection).job_ids, [])
++
++    def test_running_job_keeps_its_slot(self):
++        limit = RateLimit('api', concurrency=1)
++        queue = Queue('work', connection=self.connection)
++        other = Queue('other', connection=self.connection)
++        running = queue.enqueue(say_hello, rate_limit=limit)
++        worker = SimpleWorker([queue], connection=self.connection)
++        execution = worker.prepare_execution(running)
++        worker.prepare_job_execution(running)
++        other_waiting = other.enqueue(say_hello, rate_limit=limit)
++        registry = RateLimitRegistry('api', connection=self.connection)
++
++        queue.delete(delete_jobs=True)
++        registry.cleanup()
++        self.assertEqual(registry.get_allowed_job_ids(), [running.id])
++
++        running.ended_at = now()
++        worker.handle_job_success(running, queue, StartedJobRegistry(queue=queue), execution)
++        self.assertEqual(registry.get_allowed_job_ids(), [other_waiting.id])
++
++    def test_delete_updates_groups(self):
++        queue = Queue('work', connection=self.connection)
++        other = Queue('other', connection=self.connection)
++        group = Group.create(connection=self.connection, name='batch')
++        mine = group.enqueue_many(queue, [Queue.prepare_data(say_hello)])[0]
++        theirs = group.enqueue_many(other, [Queue.prepare_data(say_hello)])[0]
++        SimpleWorker([queue], connection=self.connection).work(burst=True)
++
++        queue.delete(delete_jobs=True)
++
++        self.assertEqual([job.id for job in group.get_jobs()], [theirs.id])
++        self.assert_gone(mine)
++
++    def test_delete_keeps_jobs_when_asked(self):
++        queue = Queue('work', connection=self.connection)
++        queued = queue.enqueue(say_hello)
++        queue.delete(delete_jobs=False)
++        self.assertEqual(Job.fetch(queued.id, connection=self.connection).id, queued.id)
++        self.assertNotIn('work', [q.name for q in Queue.all(connection=self.connection)])
++
++    def test_delete_leaves_similarly_named_queues_alone(self):
++        queue = Queue('work', connection=self.connection)
++        work2 = Queue('work2', connection=self.connection)
++        queue.enqueue(say_hello)
++        neighbour = work2.enqueue(say_hello)
++        finished = work2.enqueue(say_hello)
++        SimpleWorker([work2], connection=self.connection).work(burst=True, max_jobs=1)
++
++        queue.delete(delete_jobs=True)
++
++        self.assertEqual(work2.job_ids, [finished.id])
++        self.assertIn(neighbour.id, work2.finished_job_registry)
+REFERENCE_PATCH

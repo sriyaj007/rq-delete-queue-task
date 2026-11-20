@@ -1,6 +1,3 @@
-# Verifier image: the same pinned repository and tools as the agent image,
-# plus the grader. The submission arrives as a patch; nothing else from the
-# agent's container is used.
 FROM python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
 
 RUN apt-get update \

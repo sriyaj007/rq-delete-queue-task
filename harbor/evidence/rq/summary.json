@@ -1,39 +1,117 @@
 {
+  "name": "rq",
   "task_id": "rq_delete_queue_owned_state_contract",
-  "repository": "rq/rq",
-  "base_commit": "399ad6307febe64b20b818f71743b8337d3a1428",
-  "criteria": 9,
-  "reward_rule": "weighted, fences pay only with progress, blocker cap",
-  "blocker_cap": 0.6,
   "calibration": {
-    "gold": 1.0,
-    "base": 0.0,
-    "noop": 0.0,
-    "lazy": 0.35,
-    "careful": 0.7,
-    "alt": 1.0,
-    "cheat": 0.0
+    "ladder": {
+      "gold": 1.0,
+      "base": 0.0,
+      "noop": 0.0,
+      "lazy": 0.35,
+      "careful": 0.7,
+      "alt": 1.0,
+      "cheat": 0.0
+    },
+    "repeat_runs": {
+      "runs": 3,
+      "patches": [
+        "base",
+        "gold",
+        "alt",
+        "careful"
+      ],
+      "unstable": []
+    },
+    "repo_suite_baseline": {
+      "passed": 793,
+      "skipped": 19,
+      "runs": 3,
+      "flaky": 0
+    }
   },
-  "repo_suite_baseline": {
-    "passed": 793,
-    "skipped": 19,
-    "runs": 3,
-    "flaky": 0
+  "controls": {
+    "ok": true,
+    "checks": {
+      "noop_is_zero": true,
+      "reference_is_one": true,
+      "agent_is_isolated": true
+    },
+    "results": {
+      "noop": {
+        "job": "package-nop",
+        "reward": 0.0,
+        "status": "empty",
+        "error": null,
+        "seconds": 36
+      },
+      "reference": {
+        "job": "package-oracle",
+        "reward": 1.0,
+        "status": "applied",
+        "error": null,
+        "seconds": 131,
+        "subscores": {
+          "new_queue_with_the_same_name_starts_empty": [
+            1.0,
+            0.14
+          ],
+          "finished_failed_canceled_jobs_gone_with_results": [
+            1.0,
+            0.15
+          ],
+          "jobs_that_had_not_run_yet_are_gone_and_stay_gone": [
+            1.0,
+            0.2
+          ],
+          "rate_limited_jobs_are_gone_and_the_slot_passes_on": [
+            1.0,
+            0.15
+          ],
+          "running_job_keeps_its_rate_limit_slot": [
+            1.0,
+            0.08
+          ],
+          "dependent_in_another_queue_is_not_left_waiting": [
+            1.0,
+            0.15
+          ],
+          "delete_jobs_false_keeps_the_jobs": [
+            1.0,
+            0.05
+          ],
+          "other_queues_are_untouched": [
+            1.0,
+            0.06
+          ],
+          "repo_suite_green_and_existing_tests_untouched": [
+            1.0,
+            0.02
+          ]
+        },
+        "probe": {
+          "uid": 1000,
+          "visible": [],
+          "dns_example_com": "104.20.23.154",
+          "raw_1.1.1.1:80": "connected, no reply",
+          "raw_1.1.1.1:443": "connected, no reply",
+          "http_example_com": "failed: RemoteDisconnected Remote end closed connection without response",
+          "https_example_com": "failed: URLError <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of ",
+          "https_pypi": "failed: URLError <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of "
+        }
+      }
+    }
   },
-  "agent": {
-    "model": "claude-opus-5-5",
-    "effort": "max",
-    "agent_timeout_sec": 1800,
-    "runs": 5,
-    "rewards": [
-      1.0,
-      0.6,
-      1.0,
-      0.6,
-      1.0
-    ],
-    "mean_reward": 0.84,
-    "solve_rate": 0.6
+  "leak": {
+    "ok": true,
+    "agent_user": "uid=1000(agent) gid=1000(agent) groups=1000(agent)",
+    "needles": 345,
+    "files_holding_a_needle": [],
+    "files_found_by_name": [],
+    "absent": [
+      "/tests",
+      "/solution",
+      "/logs",
+      "/var/run/docker.sock"
+    ]
   },
   "created": "2026-11-20"
 }

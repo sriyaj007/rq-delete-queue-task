@@ -1,95 +1,7 @@
 === gold ===
-  PASS  new_queue_with_the_same_name_starts_empty            w=0.1400             0.5s
+  PASS  new_queue_with_the_same_name_starts_empty            w=0.1400             0.6s
         PASS
   PASS  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.4s
-        PASS
-  PASS  jobs_that_had_not_run_yet_are_gone_and_stay_gone     w=0.2000             0.3s
-        PASS
-  PASS  rate_limited_jobs_are_gone_and_the_slot_passes_on    w=0.1500             0.3s
-        PASS
-  PASS  running_job_keeps_its_rate_limit_slot                w=0.0800 fence       0.4s
-        PASS
-  PASS  dependent_in_another_queue_is_not_left_waiting       w=0.1500             0.8s
-        PASS
-  PASS  delete_jobs_false_keeps_the_jobs                     w=0.0500 fence       0.5s
-        PASS
-  PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
-        PASS
-  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    91.5s
-        PASS
-  -> raw 1.000, blocker cap applied: False, reward 1.000
-
-=== base ===
-  no change submitted; scored 0 without running any criterion
-  -> raw 0.000, blocker cap applied: False, reward 0.000
-
-=== noop ===
-  FAIL  new_queue_with_the_same_name_starts_empty            w=0.1400             0.5s
-        FAIL: a new queue with the deleted name starts with {'finished': 1, 'failed': 1, 'canceled': 1, 'deferred': 1, 'scheduled': 1}
-  FAIL  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.4s
-        FAIL: jobs of the deleted queue are still stored: ['finished', 'failed', 'canceled', 'grouped']
-  FAIL  jobs_that_had_not_run_yet_are_gone_and_stay_gone     w=0.2000             0.3s
-        FAIL: jobs of the deleted queue are still stored: ['scheduled for later', 'scheduled and due', 'waiting on a job in this queue', "waiting on another queue's job"]
-  FAIL  rate_limited_jobs_are_gone_and_the_slot_passes_on    w=0.1500             0.3s
-        FAIL: rate-limited jobs of the deleted queue are still stored: ['behind another queue', 'behind its own']
-  PASS  running_job_keeps_its_rate_limit_slot                w=0.0800 fence       1.5s
-        PASS
-  FAIL  dependent_in_another_queue_is_not_left_waiting       w=0.1500             0.4s
-        FAIL: the dependent job in the other queue is still waiting on a deleted job
-  PASS  delete_jobs_false_keeps_the_jobs                     w=0.0500 fence       0.4s
-        PASS
-  PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
-        PASS
-  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    90.8s
-        PASS
-  -> raw 0.000, blocker cap applied: False, reward 0.000
-
-=== lazy ===
-  PASS  new_queue_with_the_same_name_starts_empty            w=0.1400             0.5s
-        PASS
-  FAIL  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.4s
-        FAIL: jobs of the deleted queue are still stored: ['finished', 'failed', 'canceled', 'grouped']
-  FAIL  jobs_that_had_not_run_yet_are_gone_and_stay_gone     w=0.2000             0.3s
-        FAIL: jobs of the deleted queue are still stored: ['scheduled for later', 'scheduled and due', 'waiting on a job in this queue', "waiting on another queue's job"]
-  FAIL  rate_limited_jobs_are_gone_and_the_slot_passes_on    w=0.1500             0.3s
-        FAIL: rate-limited jobs of the deleted queue are still stored: ['behind another queue', 'behind its own']
-  PASS  running_job_keeps_its_rate_limit_slot                w=0.0800 fence       0.4s
-        PASS
-  FAIL  dependent_in_another_queue_is_not_left_waiting       w=0.1500             0.9s
-        FAIL: the dependent job in the other queue is still waiting on a deleted job
-  PASS  delete_jobs_false_keeps_the_jobs                     w=0.0500 fence       0.4s
-        PASS
-  PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
-        PASS
-  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    89.7s
-        PASS
-  -> raw 0.350, blocker cap applied: False, reward 0.350
-
-=== careful ===
-  PASS  new_queue_with_the_same_name_starts_empty            w=0.1400             0.5s
-        PASS
-  PASS  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.4s
-        PASS
-  PASS  jobs_that_had_not_run_yet_are_gone_and_stay_gone     w=0.2000             0.4s
-        PASS
-  FAIL  rate_limited_jobs_are_gone_and_the_slot_passes_on    w=0.1500             0.3s
-        FAIL: rate-limited jobs of the deleted queue are still stored: ['behind another queue', 'behind its own']
-  PASS  running_job_keeps_its_rate_limit_slot                w=0.0800 fence       0.3s
-        PASS
-  FAIL  dependent_in_another_queue_is_not_left_waiting       w=0.1500             0.3s
-        FAIL: the dependent job in the other queue is still waiting on a deleted job
-  PASS  delete_jobs_false_keeps_the_jobs                     w=0.0500 fence       0.3s
-        PASS
-  PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
-        PASS
-  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    90.2s
-        PASS
-  -> raw 0.700, blocker cap applied: False, reward 0.700
-
-=== alt ===
-  PASS  new_queue_with_the_same_name_starts_empty            w=0.1400             0.4s
-        PASS
-  PASS  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.3s
         PASS
   PASS  jobs_that_had_not_run_yet_are_gone_and_stay_gone     w=0.2000             0.4s
         PASS
@@ -103,12 +15,16 @@
         PASS
   PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
         PASS
-  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    89.3s
+  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    89.9s
         PASS
   -> raw 1.000, blocker cap applied: False, reward 1.000
 
-=== cheat ===
-  FAIL  new_queue_with_the_same_name_starts_empty            w=0.1400             0.4s
+=== base ===
+  no change submitted; scored 0 without running any criterion
+  -> raw 0.000, blocker cap applied: False, reward 0.000
+
+=== noop ===
+  FAIL  new_queue_with_the_same_name_starts_empty            w=0.1400             0.6s
         FAIL: a new queue with the deleted name starts with {'finished': 1, 'failed': 1, 'canceled': 1, 'deferred': 1, 'scheduled': 1}
   FAIL  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.4s
         FAIL: jobs of the deleted queue are still stored: ['finished', 'failed', 'canceled', 'grouped']
@@ -124,6 +40,133 @@
         PASS
   PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
         PASS
-  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    90.2s
+  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    90.0s
         PASS
   -> raw 0.000, blocker cap applied: False, reward 0.000
+
+=== lazy ===
+  PASS  new_queue_with_the_same_name_starts_empty            w=0.1400             0.6s
+        PASS
+  FAIL  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.4s
+        FAIL: jobs of the deleted queue are still stored: ['finished', 'failed', 'canceled', 'grouped']
+  FAIL  jobs_that_had_not_run_yet_are_gone_and_stay_gone     w=0.2000             0.3s
+        FAIL: jobs of the deleted queue are still stored: ['scheduled for later', 'scheduled and due', 'waiting on a job in this queue', "waiting on another queue's job"]
+  FAIL  rate_limited_jobs_are_gone_and_the_slot_passes_on    w=0.1500             0.3s
+        FAIL: rate-limited jobs of the deleted queue are still stored: ['behind another queue', 'behind its own']
+  PASS  running_job_keeps_its_rate_limit_slot                w=0.0800 fence       0.3s
+        PASS
+  FAIL  dependent_in_another_queue_is_not_left_waiting       w=0.1500             0.3s
+        FAIL: the dependent job in the other queue is still waiting on a deleted job
+  PASS  delete_jobs_false_keeps_the_jobs                     w=0.0500 fence       0.3s
+        PASS
+  PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
+        PASS
+  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    90.2s
+        PASS
+  -> raw 0.350, blocker cap applied: False, reward 0.350
+
+=== careful ===
+  PASS  new_queue_with_the_same_name_starts_empty            w=0.1400             0.5s
+        PASS
+  PASS  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.3s
+        PASS
+  PASS  jobs_that_had_not_run_yet_are_gone_and_stay_gone     w=0.2000             0.4s
+        PASS
+  FAIL  rate_limited_jobs_are_gone_and_the_slot_passes_on    w=0.1500             0.4s
+        FAIL: rate-limited jobs of the deleted queue are still stored: ['behind another queue', 'behind its own']
+  PASS  running_job_keeps_its_rate_limit_slot                w=0.0800 fence       0.4s
+        PASS
+  FAIL  dependent_in_another_queue_is_not_left_waiting       w=0.1500             0.3s
+        FAIL: the dependent job in the other queue is still waiting on a deleted job
+  PASS  delete_jobs_false_keeps_the_jobs                     w=0.0500 fence       0.4s
+        PASS
+  PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
+        PASS
+  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    90.7s
+        PASS
+  -> raw 0.700, blocker cap applied: False, reward 0.700
+
+=== alt ===
+  PASS  new_queue_with_the_same_name_starts_empty            w=0.1400             0.5s
+        PASS
+  PASS  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.4s
+        PASS
+  PASS  jobs_that_had_not_run_yet_are_gone_and_stay_gone     w=0.2000             0.3s
+        PASS
+  PASS  rate_limited_jobs_are_gone_and_the_slot_passes_on    w=0.1500             0.4s
+        PASS
+  PASS  running_job_keeps_its_rate_limit_slot                w=0.0800 fence       0.4s
+        PASS
+  PASS  dependent_in_another_queue_is_not_left_waiting       w=0.1500             0.3s
+        PASS
+  PASS  delete_jobs_false_keeps_the_jobs                     w=0.0500 fence       0.4s
+        PASS
+  PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
+        PASS
+  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    91.3s
+        PASS
+  -> raw 1.000, blocker cap applied: False, reward 1.000
+
+=== cheat ===
+  FAIL  new_queue_with_the_same_name_starts_empty            w=0.1400             0.5s
+        FAIL: a new queue with the deleted name starts with {'finished': 1, 'failed': 1, 'canceled': 1, 'deferred': 1, 'scheduled': 1}
+  FAIL  finished_failed_canceled_jobs_gone_with_results      w=0.1500             0.3s
+        FAIL: jobs of the deleted queue are still stored: ['finished', 'failed', 'canceled', 'grouped']
+  FAIL  jobs_that_had_not_run_yet_are_gone_and_stay_gone     w=0.2000             0.4s
+        FAIL: jobs of the deleted queue are still stored: ['scheduled for later', 'scheduled and due', 'waiting on a job in this queue', "waiting on another queue's job"]
+  FAIL  rate_limited_jobs_are_gone_and_the_slot_passes_on    w=0.1500             0.4s
+        FAIL: rate-limited jobs of the deleted queue are still stored: ['behind another queue', 'behind its own']
+  PASS  running_job_keeps_its_rate_limit_slot                w=0.0800 fence       0.4s
+        PASS
+  FAIL  dependent_in_another_queue_is_not_left_waiting       w=0.1500             0.3s
+        FAIL: the dependent job in the other queue is still waiting on a deleted job
+  PASS  delete_jobs_false_keeps_the_jobs                     w=0.0500 fence       0.4s
+        PASS
+  PASS  other_queues_are_untouched                           w=0.0600 blocker     0.5s
+        PASS
+  PASS  repo_suite_green_and_existing_tests_untouched        w=0.0200 blocker    90.6s
+        PASS
+  -> raw 0.000, blocker cap applied: False, reward 0.000
+
+=== calibration ===
+LADDER gold=1.000 base=0.000 noop=0.000 lazy=0.350 careful=0.700 alt=1.000 cheat=0.000
+
+=== repeat runs ===
+Each criterion except the repository suite, run 3 times per patch with the final
+verifier image. A criterion whose result differed between runs is marked NOT STABLE.
+== base (3 runs)
+  3x FAIL new_queue_with_the_same_name_starts_empty
+  3x FAIL finished_failed_canceled_jobs_gone_with_results
+  3x FAIL jobs_that_had_not_run_yet_are_gone_and_stay_gone
+  3x FAIL rate_limited_jobs_are_gone_and_the_slot_passes_on
+  3x FAIL dependent_in_another_queue_is_not_left_waiting
+  3x PASS running_job_keeps_its_rate_limit_slot
+  3x PASS delete_jobs_false_keeps_the_jobs
+  3x PASS other_queues_are_untouched
+== gold (3 runs)
+  3x PASS new_queue_with_the_same_name_starts_empty
+  3x PASS finished_failed_canceled_jobs_gone_with_results
+  3x PASS jobs_that_had_not_run_yet_are_gone_and_stay_gone
+  3x PASS rate_limited_jobs_are_gone_and_the_slot_passes_on
+  3x PASS running_job_keeps_its_rate_limit_slot
+  3x PASS dependent_in_another_queue_is_not_left_waiting
+  3x PASS delete_jobs_false_keeps_the_jobs
+  3x PASS other_queues_are_untouched
+== alt (3 runs)
+  3x PASS new_queue_with_the_same_name_starts_empty
+  3x PASS finished_failed_canceled_jobs_gone_with_results
+  3x PASS jobs_that_had_not_run_yet_are_gone_and_stay_gone
+  3x PASS rate_limited_jobs_are_gone_and_the_slot_passes_on
+  3x PASS running_job_keeps_its_rate_limit_slot
+  3x PASS dependent_in_another_queue_is_not_left_waiting
+  3x PASS delete_jobs_false_keeps_the_jobs
+  3x PASS other_queues_are_untouched
+== careful (3 runs)
+  3x FAIL rate_limited_jobs_are_gone_and_the_slot_passes_on
+  3x FAIL dependent_in_another_queue_is_not_left_waiting
+  3x PASS new_queue_with_the_same_name_starts_empty
+  3x PASS finished_failed_canceled_jobs_gone_with_results
+  3x PASS jobs_that_had_not_run_yet_are_gone_and_stay_gone
+  3x PASS running_job_keeps_its_rate_limit_slot
+  3x PASS delete_jobs_false_keeps_the_jobs
+  3x PASS other_queues_are_untouched
