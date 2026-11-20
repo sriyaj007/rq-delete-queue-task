@@ -1,0 +1,39 @@
+{
+  "task_id": "rq_delete_queue_owned_state_contract",
+  "repository": "rq/rq",
+  "base_commit": "399ad6307febe64b20b818f71743b8337d3a1428",
+  "criteria": 9,
+  "reward_rule": "weighted, fences pay only with progress, blocker cap",
+  "blocker_cap": 0.6,
+  "calibration": {
+    "gold": 1.0,
+    "base": 0.0,
+    "noop": 0.0,
+    "lazy": 0.35,
+    "careful": 0.7,
+    "alt": 1.0,
+    "cheat": 0.0
+  },
+  "repo_suite_baseline": {
+    "passed": 793,
+    "skipped": 19,
+    "runs": 3,
+    "flaky": 0
+  },
+  "agent": {
+    "model": "claude-opus-5-5",
+    "effort": "max",
+    "agent_timeout_sec": 1800,
+    "runs": 5,
+    "rewards": [
+      1.0,
+      0.6,
+      1.0,
+      0.6,
+      1.0
+    ],
+    "mean_reward": 0.84,
+    "solve_rate": 0.6
+  },
+  "created": "2026-11-20"
+}

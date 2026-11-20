@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "created": "2026-11-20",
+  "contains": "reference solution and hidden grader; keep away from evaluated models",
+  "runtime": {
+    "python": "3.12",
+    "harbor": "0.26.0"
+  },
+  "tasks": [
+    {
+      "task_id": "rq_delete_queue_owned_state_contract",
+      "name": "rq",
+      "dataset_instance_id": "rq__rq-rq_delete_queue_owned_state_contract",
+      "repository": "rq/rq",
+      "language": "Python",
+      "criteria": 9,
+      "reward_rule": "weighted_cap",
+      "blocker_cap": 0.6,
+      "author_calibration": {
+        "gold": 1.0,
+        "base": 0.0,
+        "noop": 0.0,
+        "lazy": 0.35,
+        "careful": 0.7,
+        "alt": 1.0,
+        "cheat": 0.0
+      }
+    }
+  ]
+}

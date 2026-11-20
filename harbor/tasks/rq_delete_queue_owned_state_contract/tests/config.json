@@ -1,0 +1,17 @@
+{
+  "task_id": "rq_delete_queue_owned_state_contract",
+  "service": "redis",
+  "blocker_cap": 0.6,
+  "reward_rule": "Sum of the weights of passing criteria. Fence criteria (behaviour the untouched code already has) pay only when at least one target criterion passes. If a blocker fails, the score is capped at blocker_cap.",
+  "criteria": [
+    {"name": "new_queue_with_the_same_name_starts_empty",              "weight": 0.14, "blocker": false, "fence": false, "timeout": 300, "check": "c01_new_queue_starts_empty.py"},
+    {"name": "finished_failed_canceled_jobs_gone_with_results",        "weight": 0.15, "blocker": false, "fence": false, "timeout": 300, "check": "c02_finished_jobs_gone_with_results.py"},
+    {"name": "jobs_that_had_not_run_yet_are_gone_and_stay_gone",       "weight": 0.20, "blocker": false, "fence": false, "timeout": 300, "check": "c03_jobs_not_yet_run_are_gone_and_stay_gone.py"},
+    {"name": "rate_limited_jobs_are_gone_and_the_slot_passes_on",      "weight": 0.15, "blocker": false, "fence": false, "timeout": 300, "check": "c04_rate_limited_jobs_gone_and_slot_passes_on.py"},
+    {"name": "running_job_keeps_its_rate_limit_slot",                  "weight": 0.08, "blocker": false, "fence": true,  "timeout": 300, "check": "c05_running_job_keeps_its_slot.py"},
+    {"name": "dependent_in_another_queue_is_not_left_waiting",         "weight": 0.15, "blocker": false, "fence": false, "timeout": 300, "check": "c06_dependent_elsewhere_not_left_waiting.py"},
+    {"name": "delete_jobs_false_keeps_the_jobs",                       "weight": 0.05, "blocker": false, "fence": true,  "timeout": 300, "check": "c07_keep_jobs_when_asked.py"},
+    {"name": "other_queues_are_untouched",                             "weight": 0.06, "blocker": true,  "fence": true,  "timeout": 300, "check": "c08_other_queues_untouched.py"},
+    {"name": "repo_suite_green_and_existing_tests_untouched",          "weight": 0.02, "blocker": true,  "fence": true,  "timeout": 900, "check": "c09_repo_suite_green_tests_untouched.py"}
+  ]
+}

@@ -1,0 +1,6 @@
+services:
+  main:
+    network_mode: none
+    pids_limit: 1024
+    security_opt:
+      - no-new-privileges:true

@@ -1,0 +1,42 @@
+schema_version = "1.4"
+artifacts = ["/workspace/submissions/submitted.patch"]
+
+[task]
+name = "sriya/rq_delete_queue_owned_state_contract"
+version = "1.0.0"
+description = "Deleting an rq queue with its jobs leaves its registries, job records and rate-limited, scheduled and dependent jobs behind, and the queue comes back by itself."
+authors = [{ name = "Sriya Jonnadula" }]
+keywords = ["rq", "redis", "job-queue", "lifecycle", "python"]
+
+[metadata]
+task = "rq_delete_queue_owned_state_contract"
+shape = "ExpertCrowd-SWE (arXiv 2611.13246): ticket, frozen repository, hidden weighted behaviour checks"
+reward = "weighted score in [0, 1]; per-criterion results in /logs/verifier/report.json and ctrf.json"
+
+[agent]
+timeout_sec = 1800.0
+user = "1000:1000"
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 8192
+network_mode = "no-network"
+
+[verifier]
+timeout_sec = 3600.0
+user = "0"
+environment_mode = "separate"
+
+[verifier.environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 8192
+network_mode = "no-network"
+
+# Runs as root in the agent's container after the agent stops. It writes the
+# agent's change as one patch; the patch is the only thing the verifier sees.
+[[verifier.collect]]
+command = "/opt/task-tools/python -I /opt/task-tools/capture.py"
+user = "0"
+timeout_sec = 900

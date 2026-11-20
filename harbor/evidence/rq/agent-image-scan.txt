@@ -1,0 +1,22 @@
+Agent image scan: rq_delete_queue_owned_state_contract
+user: uid=1000(agent) gid=1000(agent) groups=1000(agent)
+
+Grader, solution or answer files visible to the agent user:
+  (none listed above means none found)
+
+/tests: absent
+/solution: absent
+/logs: absent
+
+/opt/task-tools (root-owned, read-only to the agent):
+  total 20
+  drwxr-xr-x 1 root root 4096 Nov 20 10:35 .
+  drwxr-xr-x 1 root root 4096 Nov 20 10:35 ..
+  drwxr-xr-x 8 root root 4096 Nov 20 10:35 baseline.git
+  -rw-r--r-- 1 root root 4088 Nov 20 09:56 capture.py
+  lrwxrwxrwx 1 root root   25 Nov 20 10:35 python -> /usr/local/bin/python3.12
+  -rw-r--r-- 1 root root  253 Nov 20 09:12 requirements.lock
+
+Repository history:
+  867d735eebce20c0bc08b7a52075720120c2cbb0 rq 399ad6307feb
+Uncommitted changes in /workspace/repo: 0
